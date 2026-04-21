@@ -82,11 +82,18 @@ bool QoiEncode(uint32_t width, uint32_t height, uint8_t channels, uint8_t colors
                         QoiWriteU8(b2);
                     } else {
                         if (channels == 4) {
-                            QoiWriteU8(QOI_OP_RGBA_TAG);
-                            QoiWriteU8(r);
-                            QoiWriteU8(g);
-                            QoiWriteU8(b);
-                            QoiWriteU8(a);
+                            if (a == pre_a) {
+                                QoiWriteU8(QOI_OP_RGB_TAG);
+                                QoiWriteU8(r);
+                                QoiWriteU8(g);
+                                QoiWriteU8(b);
+                            } else {
+                                QoiWriteU8(QOI_OP_RGBA_TAG);
+                                QoiWriteU8(r);
+                                QoiWriteU8(g);
+                                QoiWriteU8(b);
+                                QoiWriteU8(a);
+                            }
                         } else {
                             QoiWriteU8(QOI_OP_RGB_TAG);
                             QoiWriteU8(r);
@@ -136,7 +143,6 @@ bool QoiDecode(uint32_t &width, uint32_t &height, uint8_t &channels, uint8_t &co
     for (int i = 0; i < px_num; ++i) {
         if (run > 0) {
             run--;
-            // emit previous pixel as-is
         } else {
             uint8_t tag = QoiReadU8();
             if (tag == QOI_OP_RGB_TAG) {
@@ -173,7 +179,6 @@ bool QoiDecode(uint32_t &width, uint32_t &height, uint8_t &channels, uint8_t &co
                     b = static_cast<uint8_t>(static_cast<int>(b) + dg + db_dg);
                 } else if (t == QOI_OP_RUN_TAG) {
                     run = (tag & 0x3f);
-                    // current pixel is previous; we'll emit one below and the rest via run>0
                 }
             }
         }
